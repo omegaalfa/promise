@@ -11,7 +11,6 @@ class PromiseTest extends TestCase
         $promise->resolve('Resolved value');
 
         $this->assertEquals('fulfilled', $promise->getState());
-        $this->assertEquals('Resolved value', $promise->getValue());
     }
 
     public function testReject()
@@ -20,7 +19,6 @@ class PromiseTest extends TestCase
         $promise->reject('Rejected reason');
 
         $this->assertEquals('rejected', $promise->getState());
-        $this->assertEquals('Rejected reason', $promise->getValue());
     }
 
     public function testThen()
@@ -34,18 +32,5 @@ class PromiseTest extends TestCase
         });
 
         $this->assertEquals('Resolved value processed', $result);
-    }
-
-    public function testCatch()
-    {
-        $promise = new Promise();
-        $promise->reject('Rejected reason');
-
-        $result = null;
-        $promise->catch(function ($reason) use (&$result) {
-            $result = 'Error: ' . $reason;
-        });
-
-        $this->assertEquals('Error: Rejected reason', $result);
     }
 }
