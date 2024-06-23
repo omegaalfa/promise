@@ -5,8 +5,8 @@
     "license": "MIT",
     "authors": [
         {
-          "name": "wrt",
-          "email": "webdesenvolver.agenda@gmail.com"
+            "name": "wrt",
+            "email": "webdesenvolver.agenda@gmail.com"
         }
     ],
     "require": {
@@ -16,18 +16,18 @@
         "phpunit/phpunit": "^9.5 || ^10.0",
         "friendsofphp/php-cs-fixer": "^3.0"
     },
-      "scripts": {
+    "scripts": {
         "test": "phpunit",
         "php-cs-fixer-dry-run": "php-cs-fixer fix --dry-run"
     },
     "autoload": {
         "psr-4": {
-            "src\\promises\\": "src/promises"
+            "Promises\\": "src/promises"
         }
     },
     "autoload-dev": {
         "psr-4": {
-          "Tests\\": "tests/"
+            "Tests\\": "tests/"
         }
-    },
+    }
 }
