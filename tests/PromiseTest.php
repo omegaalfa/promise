@@ -1,36 +1,46 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use src\promises\Promise;
+use Omegaalfa\Promise\Promise;
 
 class PromiseTest extends TestCase
 {
-    public function testResolve()
-    {
-        $promise = new Promise();
-        $promise->resolve('Resolved value');
+	public function testResolve()
+	{
+		$promise = new Promise(function($resolve) {
+			$resolve('Success');
+		});
 
-        $this->assertEquals('fulfilled', $promise->getState());
-    }
+		$promise->then(function($result) {
+			$this->assertEquals('Success', $result);
+		});
+	}
 
-    public function testReject()
-    {
-        $promise = new Promise();
-        $promise->reject('Rejected reason');
+	public function testReject()
+	{
+		$promise = new Promise(function($resolve, $reject) {
+			$reject(new Exception('Failure'));
+		});
 
-        $this->assertEquals('rejected', $promise->getState());
-    }
+		$promise->catch(function($error) {
+			$this->assertInstanceOf(Exception::class, $error);
+			$this->assertEquals('Failure', $error->getMessage());
+		});
+	}
 
-    public function testThen()
-    {
-        $promise = new Promise();
-        $promise->resolve('Resolved value');
+	public function testThen()
+	{
+		$promise = new Promise(function($resolve) {
+			$resolve('First step');
+		});
 
-        $result = null;
-        $promise->then(function ($value) use (&$result) {
-            $result = $value . ' processed';
-        });
-
-        $this->assertEquals('Resolved value processed', $result);
-    }
+		$promise->then(function($result) {
+			$this->assertEquals('First step', $result);
+			return 'Second step';
+		})
+			->then(function($result) {
+				$this->assertEquals('Second step', $result);
+			});
+	}
 }
+
