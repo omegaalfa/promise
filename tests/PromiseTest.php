@@ -1,46 +1,94 @@
 <?php
 
+declare(strict_types=1);
+
 use PHPUnit\Framework\TestCase;
 use Omegaalfa\Promise\Promise;
+use Omegaalfa\Promise\TaskQueue;
 
-class PromiseTest extends TestCase
+final class PromiseTest extends TestCase
 {
-	public function testResolve()
-	{
-		$promise = new Promise(function($resolve) {
-			$resolve('Success');
-		});
+    public function testPromiseResolvesValue(): void
+    {
+        $promise = new Promise(function ($resolve, $reject) {
+            $resolve('ok');
+        });
 
-		$promise->then(function($result) {
-			$this->assertEquals('Success', $result);
-		});
-	}
+        $result = null;
+        $promise->then(function ($value) use (&$result) {
+            $result = $value;
+        });
 
-	public function testReject()
-	{
-		$promise = new Promise(function($resolve, $reject) {
-			$reject(new Exception('Failure'));
-		});
+        TaskQueue::instance()->run();
 
-		$promise->catch(function($error) {
-			$this->assertInstanceOf(Exception::class, $error);
-			$this->assertEquals('Failure', $error->getMessage());
-		});
-	}
+        $this->assertSame('ok', $result);
+    }
 
-	public function testThen()
-	{
-		$promise = new Promise(function($resolve) {
-			$resolve('First step');
-		});
+    public function testPromiseRejectsValue(): void
+    {
+        $promise = new Promise(function ($resolve, $reject) {
+            $reject(new \RuntimeException('fail'));
+        });
 
-		$promise->then(function($result) {
-			$this->assertEquals('First step', $result);
-			return 'Second step';
-		})
-			->then(function($result) {
-				$this->assertEquals('Second step', $result);
-			});
-	}
+        $errorMessage = null;
+        $promise->catch(function ($reason) use (&$errorMessage) {
+            $errorMessage = $reason->getMessage();
+        });
+
+        TaskQueue::instance()->run();
+
+        $this->assertSame('fail', $errorMessage);
+    }
+
+    public function testPromiseFinallyIsCalled(): void
+    {
+        $promise = new Promise(function ($resolve, $reject) {
+            $resolve('done');
+        });
+
+        $finallyCalled = false;
+        $promise
+            ->then(fn($value) => $value)
+            ->finally(function () use (&$finallyCalled) {
+                $finallyCalled = true;
+            });
+
+        TaskQueue::instance()->run();
+
+        $this->assertTrue($finallyCalled);
+    }
+
+    public function testPromiseChain(): void
+    {
+        $promise = new Promise(function ($resolve, $reject) {
+            $resolve(2);
+        });
+
+        $result = null;
+        $promise
+            ->then(fn($value) => $value * 2)
+            ->then(function ($value) use (&$result) {
+                $result = $value + 1;
+            });
+
+        TaskQueue::instance()->run();
+
+        $this->assertSame(5, $result);
+    }
+
+    public function testAsyncHelper(): void
+    {
+        $promise = new Promise(function ($resolve, $reject) {
+            TaskQueue::instance()->addTimer(1, fn() => $resolve('async ok'));
+        });
+
+        $result = null;
+        $promise->then(function ($value) use (&$result) {
+            $result = $value;
+        });
+
+        TaskQueue::instance()->run();
+
+        $this->assertSame('async ok', $result);
+    }
 }
-
