@@ -6,12 +6,16 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ["8.2"]
+        php: [ "8.2" ]
     name: ⚙️ Running tests (PHP ${{ matrix.php }})
 
     steps:
