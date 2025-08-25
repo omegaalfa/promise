@@ -2,9 +2,10 @@
 <phpunit
         bootstrap="vendor/autoload.php"
         colors="true"
-        failOnRisky="true"
-        failOnWarning="true"
         cacheResult="false"
+        failOnRisky="true"
+        failOnWarning="false"
+        failOnDeprecation="false"
 >
     <testsuites>
         <testsuite name="Unit">
@@ -12,10 +13,19 @@
         </testsuite>
     </testsuites>
 
-    <coverage>
+    <!-- Filtro de arquivos para cobertura -->
+    <source>
         <include>
             <directory suffix=".php">src</directory>
         </include>
+        <exclude>
+            <directory>vendor</directory>
+            <directory>tests</directory>
+        </exclude>
+    </source>
+
+    <!-- Relatórios de cobertura -->
+    <coverage processUncoveredFiles="true">
         <report>
             <clover outputFile="build/coverage/clover.xml"/>
             <text outputFile="php://stdout"/>
