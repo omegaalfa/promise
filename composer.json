@@ -23,7 +23,10 @@
     "autoload": {
         "psr-4": {
             "Omegaalfa\\Promise\\": "src/"
-        }
+        },
+        "files": [
+            "src/functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

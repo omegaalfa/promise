@@ -21,131 +21,29 @@ Exemplo de uso
 
 ```php
 
-use Omegaalfa\Promise;
+require __DIR__ . '/vendor/autoload.php';
 
-function someAsyncOperation(): string
-{
-	return "Operation completed successfully!";
-}
-
-// Simula uma operação assíncrona que falha
-function someFailingOperation(): void
-{
-	throw new RuntimeException("Operation failed!");
-}
-
-## Exemplo básico de uso
-$promise = new Promise(function($resolve, $reject) {
-	try {
-		$result = someAsyncOperation();
-		$resolve($result);
-	} catch(Throwable $e) {
-		$reject($e);
-	}
+// Exemplo de uso
+async(function ($resolve, $reject) {
+    // Simula operação assíncrona (ex: consulta API ou leitura de arquivo)
+    sleep(1);
+    $resolve("Operação concluída com sucesso!");
+})
+->then(function ($result) {
+    echo "✔ THEN: $result\n";
+})
+->catch(function ($error) {
+    echo "❌ CATCH: " . $error->getMessage() . "\n";
+})
+->finally(function () {
+    echo "🎯 FINALLY sempre executa!\n";
 });
-
-$promise
-	->then(function($result) {
-		echo "Success: $result\n";
-	})
-	->catch(function($error) {
-		echo "Error: {$error->getMessage()}\n";
-	})
-	->finally(function() {
-		echo "Completed\n";
-	});
-
-## Exemplo com Promise que falha
-$promise = new Promise(function($resolve, $reject) {
-	try {
-		someFailingOperation();
-	} catch(Throwable $e) {
-		$reject($e);
-	}
-});
-
-$promise
-	->then(function($result) {
-		echo "Success: $result\n";
-	})
-	->catch(function($error) {
-		echo "Error: {$error->getMessage()}\n";
-	})
-	->finally(function() {
-		echo "Completed\n";
-	});
-
-## Exemplo de Promise::all
-Promise::all([
-	new Promise(function($resolve) {
-		$resolve("Result 1");
-	}),
-	new Promise(function($resolve) {
-		$resolve("Result 2");
-	}),
-	new Promise(function($resolve) {
-		$resolve("Result 3");
-	}),
-])->then(function($results) {
-	echo "All results: " . implode(", ", $results) . "\n";
-})->catch(function($error) {
-	echo "Error: {$error->getMessage()}\n";
-})->finally(function() {
-	echo "All operations completed\n";
-});
-
-## Exemplo de Promise::race
-Promise::race([
-	new Promise(function($resolve) {
-		sleep(1); // Simula demora
-		$resolve("Result from slow operation");
-	}),
-	new Promise(function($resolve) {
-		$resolve("Result from fast operation");
-	}),
-])->then(function($firstResult) {
-	echo "First resolved result: $firstResult\n";
-})->catch(function($error) {
-	echo "Error: {$error->getMessage()}\n";
-})->finally(function() {
-	echo "Race completed\n";
-});
-
-## Usando `any` para aguardar qualquer promessa resolvida
-
-$promise1 = new Promise(function($resolve, $reject) {
-	// Simula uma operação assíncrona
-	sleep(1);
-	$resolve("Resultado 1");
-});
-
-$promise2 = new Promise(function($resolve, $reject) {
-	// Simula uma operação assíncrona
-	sleep(1);
-	$resolve("Resultado 2");
-});
-
-$promise3 = new Promise(function($resolve, $reject) {
-	// Simula uma operação assíncrona
-	sleep(1);
-	$reject(new Exception("Erro no Promise 3"));
-});
-
-
-Promise::any([$promise1, $promise2, $promise3])->then(
-	function($value) {
-		echo "Alguma promessa foi resolvida: $value"; // Resultado da primeira promessa resolvida.
-	},
-	function($reason) {
-		echo "Todas as promessas foram rejeitadas: $reason"; // Se todas as promessas forem rejeitadas.
-	}
-);
 
 ```
 
 ## Contribuição
 
-Se desejar contribuir com melhorias ou correções, fique à vontade para criar uma pull request ou abrir uma issue no repositório.
+Se desejar contribuir com melhorias ou correções, fique à vontade para criar um pull request ou abrir uma issue no repositório.
 
 ## Licença
 

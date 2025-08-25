@@ -6,25 +6,23 @@ namespace Omegaalfa\Promise;
 
 interface PromiseInterface
 {
-	/**
-	 * @param  callable|null  $onFulfilled
-	 * @param  callable|null  $onRejected
-	 *
-	 * @return $this
-	 */
-	public function then(callable $onFulfilled = null, callable $onRejected = null): self;
+    /**
+     * @param callable $onFulfilled
+     * @return PromiseInterface
+     */
+    public function then(callable $onFulfilled): PromiseInterface;
 
 	/**
 	 * @param  callable  $onRejected
 	 *
-	 * @return $this
+	 * @return PromiseInterface
 	 */
-	public function catch(callable $onRejected): self;
+    public function catch(callable $onRejected): PromiseInterface;
 
 	/**
 	 * @param  callable  $onFinally
 	 *
-	 * @return $this
+	 * @return PromiseInterface
 	 */
-	public function finally(callable $onFinally): self;
+	public function finally(callable $onFinally): PromiseInterface;
 }
