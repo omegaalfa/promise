@@ -17,7 +17,7 @@
         "friendsofphp/php-cs-fixer": "^3.0"
     },
     "scripts": {
-        "test": "phpunit",
+        "test": "vendor/bin/phpunit",
         "php-cs-fixer-dry-run": "php-cs-fixer fix --dry-run"
     },
     "autoload": {

@@ -1,8 +1,9 @@
 name: 🧪 CI
+
 on:
   push:
     branches:
-      - 'main'
+      - main
   pull_request:
 
 jobs:
@@ -10,8 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ["8.2"]  # Versão do PHP desejada
-    name: ⚙️ Running test for PHP ${{ matrix.php }}
+        php: ["8.2"]
+    name: ⚙️ Running tests (PHP ${{ matrix.php }})
+
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -55,17 +57,31 @@ jobs:
       - name: 🧰 Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}  # Aqui define a versão do PHP desejada (8.2)
+          php-version: ${{ matrix.php }}
           coverage: xdebug
+          tools: composer
 
       - name: 📦 Cache Composer packages
-        id: composer-cache
         uses: actions/cache@v4
         with:
           path: vendor
-          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-php-
+            ${{ runner.os }}-php-${{ matrix.php }}-
 
       - name: 📥 Install dependencies
         run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: 🔎 CS Fixer (dry-run)
+        run: composer run php-cs-fixer-dry-run || true
+
+      - name: 🧪 PHPUnit
+        run: |
+          mkdir -p build/coverage
+          vendor/bin/phpunit --coverage-clover build/coverage/clover.xml
+
+      - name: 📤 Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: build/coverage/
