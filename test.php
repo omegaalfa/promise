@@ -2,32 +2,39 @@
 
 require_once 'vendor/autoload.php';
 
-async(function ($resolve) {
-    $resolve("ok");
-})
-    ->then(fn($v) => strtoupper($v)) // encadeia transformação
-    ->then(fn($v) => print "Valor final: $v\n")
-    ->catch(fn($err) => print "Erro: $err\n");
-
-// Promise rejeitada
 async(function ($resolve, $reject) {
-    $reject("falhou");
-})
-    ->then(fn($v) => print "Nunca chega aqui\n")
-    ->catch(fn($err) => print "Erro tratado: $err\n");
-
-
-async(static function ($resolve) {
-    return $resolve('success');
-})->then(function ($value) {
-    echo $value . PHP_EOL;
-})->catch(function ($reason) {
-    echo 'Error: ' . $reason . PHP_EOL;
+    $resolve("Hello, World!");
+})->then(function ($result) {
+    echo "Resultado: $result\n"; // deve imprimir "Resultado: Hello, World!"
 });
+
+
+async(function ($resolve, $reject) {
+    $reject(new RuntimeException("Falhou aqui"));
+})
+    ->then(function ($result) {
+        echo "Isso não será chamado\n";
+    })
+    ->catch(function ($error) {
+        echo "Erro capturado: " . $error->getMessage() . "\n"; // imprime "Erro capturado: Falhou aqui"
+    });
+
+async(function ($resolve, $reject) {
+    $resolve(5);
+})
+    ->then(function ($n) {
+        return $n * 2;
+    })
+    ->then(function ($n) {
+        return $n + 3;
+    })
+    ->then(function ($n) {
+        echo "Encadeamento final: $n\n"; // deve imprimir "Encadeamento final: 13"
+    });
+
 
 async(function ($resolve, $reject) {
     // Simula operação assíncrona (ex: consulta API ou leitura de arquivo)
-    sleep(1);
     $resolve("Operação concluída com sucesso!");
 })
     ->then(function ($result) {

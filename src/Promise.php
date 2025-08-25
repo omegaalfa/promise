@@ -65,32 +65,29 @@ class Promise implements PromiseInterface
     public function finally(callable $onFinally): PromiseInterface
     {
         return new Promise(function ($resolve, $reject) use ($onFinally) {
-            // Callback para o caso de sucesso (fulfilled)
             $onFulfilled = static function ($value) use ($onFinally, $resolve, $reject) {
                 try {
                     $onFinally();
-                    $resolve($value); // Resolve a nova promise com o valor original
+                    $resolve($value);
                 } catch (\Throwable $e) {
-                    $reject($e); // Se o finally lançar um erro, rejeita com esse novo erro
+                    $reject($e);
                 }
             };
 
-            // Callback para o caso de falha (rejected)
             $onRejected = static function ($reason) use ($onFinally, $resolve, $reject) {
                 try {
                     $onFinally();
-                    $reject($reason); // Rejeita a nova promise com o motivo original
+                    $reject($reason);
                 } catch (\Throwable $e) {
-                    $reject($e); // Se o finally lançar um erro, rejeita com esse novo erro
+                    $reject($e);
                 }
             };
 
-            // Anexa os callbacks à promise atual
             if ($this->state === 'fulfilled') {
                 TaskQueue::instance()->defer(fn() => $onFulfilled($this->value));
             } elseif ($this->state === 'rejected') {
                 TaskQueue::instance()->defer(fn() => $onRejected($this->reason));
-            } else { // 'pending'
+            } else {
                 $this->fulfilledCallbacks[] = $onFulfilled;
                 $this->rejectedCallbacks[] = $onRejected;
             }
@@ -127,10 +124,14 @@ class Promise implements PromiseInterface
     public function catch(callable $onRejected): PromiseInterface
     {
         return new Promise(function ($resolve, $reject) use ($onRejected) {
-            $callback = static function ($reason) use ($onRejected, $resolve, $reject) {
+            $handleFulfilled = static function ($value) use ($resolve) {
+                $resolve($value);
+            };
+
+            $handleRejected = static function ($reason) use ($onRejected, $resolve, $reject) {
                 try {
                     $result = $onRejected($reason);
-                    if ($result instanceof Promise) {
+                    if ($result instanceof PromiseInterface) {
                         $result->then($resolve)->catch($reject);
                     } else {
                         $resolve($result);
@@ -140,10 +141,14 @@ class Promise implements PromiseInterface
                 }
             };
 
-            if ($this->state === 'rejected') {
-                TaskQueue::instance()->defer(fn() => $callback($this->reason));
-            } elseif ($this->state === 'pending') {
-                $this->rejectedCallbacks[] = $callback;
+            if ($this->state === 'fulfilled') {
+                // <<< ESTE RAMO FALTAVA
+                TaskQueue::instance()->defer(fn() => $handleFulfilled($this->value));
+            } elseif ($this->state === 'rejected') {
+                TaskQueue::instance()->defer(fn() => $handleRejected($this->reason));
+            } else { // pending
+                $this->fulfilledCallbacks[] = $handleFulfilled;
+                $this->rejectedCallbacks[] = $handleRejected;
             }
         });
     }
@@ -155,10 +160,10 @@ class Promise implements PromiseInterface
     public function then(callable $onFulfilled): PromiseInterface
     {
         return new Promise(function ($resolve, $reject) use ($onFulfilled) {
-            $callback = static function ($value) use ($onFulfilled, $resolve, $reject) {
+            $handleFulfilled = static function ($value) use ($onFulfilled, $resolve, $reject) {
                 try {
                     $result = $onFulfilled($value);
-                    if ($result instanceof Promise) {
+                    if ($result instanceof PromiseInterface) {
                         $result->then($resolve)->catch($reject);
                     } else {
                         $resolve($result);
@@ -168,10 +173,18 @@ class Promise implements PromiseInterface
                 }
             };
 
+            $handleRejected = static function ($reason) use ($reject) {
+                // Propaga a rejeição para a nova promise
+                $reject($reason);
+            };
+
             if ($this->state === 'fulfilled') {
-                TaskQueue::instance()->defer(fn() => $callback($this->value));
-            } elseif ($this->state === 'pending') {
-                $this->fulfilledCallbacks[] = $callback;
+                TaskQueue::instance()->defer(fn() => $handleFulfilled($this->value));
+            } elseif ($this->state === 'rejected') {
+                TaskQueue::instance()->defer(fn() => $handleRejected($this->reason));
+            } else { // pending
+                $this->fulfilledCallbacks[] = $handleFulfilled;
+                $this->rejectedCallbacks[] = $handleRejected;
             }
         });
     }
